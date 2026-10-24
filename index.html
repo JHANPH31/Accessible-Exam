@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accessible Exam</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0e1022">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Accessible Exam">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top">
+  <div class="brand">
+    <span class="cell" aria-hidden="true"><i class="on"></i><i></i><i class="on"></i><i class="on"></i><i></i><i class="on"></i></span>
+    <div><h1>Accessible Exam</h1><p>Gesture and voice assisted</p></div>
+  </div>
+  <div id="progress" class="progress hidden">
+    <span>Question <b id="qNum">0</b> of <b id="qTotal">0</b></span>
+    <div class="bar"><i id="progressFill"></i></div>
+  </div>
+  <div class="tools">
+    <select id="voiceLang" aria-label="Voice language">
+      <option value="auto">Voice: match question</option>
+      <option value="en-US">Voice: English</option>
+      <option value="fil-PH">Voice: Filipino</option>
+    </select>
+    <button id="installBtn" class="chip hidden">Install app</button>
+    <button id="soundBtn" class="chip" aria-pressed="true"></button>
+    <button id="themeBtn" class="chip"></button>
+  </div>
+</header>
+
+<main id="main" class="app">
+
+  <section id="modeSelection">
+    <h2>How will this exam run?</h2>
+    <div class="modes">
+      <button id="customModeButton" class="mode">
+        <span class="glyph" aria-hidden="true">⠿</span>
+        <h3>Write my own exam</h3>
+        <p>Type or paste questions and choices. The app reads them aloud.</p>
+      </button>
+      <button id="brailleModeButton" class="mode">
+        <span class="glyph" aria-hidden="true">⠃⠗</span>
+        <h3>Braille answer mode</h3>
+        <p>Questions come from Braille paper. The app only records answers.</p>
+      </button>
+    </div>
+    <label class="nm">Participant name<input id="who" placeholder="Optional, shown in results"></label>
+    <h3 class="sub">Saved exams</h3>
+    <div id="library" class="lib"></div>
+    <button id="teacherBtn" class="btn alt">Teacher: check results</button>
+  </section>
+
+  <section id="customSetup" class="hidden">
+    <div class="head"><button class="btn alt" data-go="modeSelection">Back</button><h2>Write your exam</h2></div>
+    <label class="nm">Exam name<input id="examName" value="Untitled exam"></label>
+    <details class="paste">
+      <summary>Paste many questions at once</summary>
+      <textarea id="pasteBox" rows="8" placeholder="Q: What is the capital of the Philippines?&#10;A) Cebu&#10;B) Manila&#10;C) Davao&#10;Answer: B"></textarea>
+      <button id="importBtn" class="btn alt">Add pasted questions</button>
+    </details>
+    <div id="qList"></div>
+    <div class="dock">
+      <button id="addQ" class="btn alt">Add question</button>
+      <button id="clearQs" class="btn alt">Clear all</button>
+      <button id="saveExam" class="btn alt">Save exam</button>
+      <button id="startCustom" class="btn grow">Start exam</button>
+    </div>
+  </section>
+
+  <section id="brailleSetup" class="hidden">
+    <div class="head"><button class="btn alt" data-go="modeSelection">Back</button><h2>Braille answer mode</h2></div>
+    <p class="lead">The participant reads the Braille paper. The app shows no questions and only records answers.</p>
+    <div class="form">
+      <label>Exam name<input id="bName" value="Braille exam"></label>
+      <label>Number of questions<input id="bCount" type="number" min="1" max="100" value="10"></label>
+      <label>Answer key, optional<input id="bKey" placeholder="For scoring, e.g. BACDE…"></label>
+      <button id="startBraille" class="btn">Start exam</button>
+    </div>
+  </section>
+
+  <section id="examArea" class="hidden">
+    <div class="split">
+      <div class="left">
+        <p id="modeLabel" class="tag"></p>
+        <div id="normalQ">
+          <div id="qText" class="qtext"></div>
+          <div id="options" class="options"></div>
+        </div>
+        <div id="brailleQ" class="hidden bq">
+          <span class="glyph" aria-hidden="true">⠿</span>
+          <h2>Question <span id="bNum">1</span></h2>
+          <p>Read it from your Braille paper, then show your answer.</p>
+        </div>
+        <div class="fingers" aria-label="Finger guide">
+          <span><b>1</b> ⠁ A</span><span><b>2</b> ⠃ B</span><span><b>3</b> ⠉ C</span><span><b>4</b> ⠙ D</span><span><b>5</b> ⠑ E</span>
+        </div>
+        <p class="keys">Keyboard: A–E or 1–5 choose · Enter confirm · R repeat · P pause</p>
+      </div>
+
+      <div class="right">
+        <div class="cam">
+          <video id="camera" autoplay muted playsinline></video>
+          <canvas id="canvas"></canvas>
+          <span id="camState" class="badge-cam">Ready</span>
+        </div>
+        <div id="stage" class="stage">
+          <div class="ring"><div><b id="answerLetter">—</b><span id="answerBraille" aria-hidden="true">⠀</span></div></div>
+          <div class="info">
+            <p id="answerMsg" class="msg" aria-live="polite">Show 1–5 fingers</p>
+            <dl>
+              <dt>Fingers</dt><dd id="fingerStatus">Waiting</dd>
+              <dt>Selected</dt><dd id="selStatus">None</dd>
+              <dt>Confirm</dt><dd id="nodStatus">Waiting</dd>
+            </dl>
+          </div>
+        </div>
+        <div class="nod"><span>Nod to confirm</span><div class="meter"><i id="nodMeter"></i></div></div>
+      </div>
+    </div>
+    <div class="dock controls">
+      <button id="repeat" class="btn alt">Repeat question</button>
+      <button id="pause" class="btn alt">Pause</button>
+      <button id="end" class="btn alt">End exam</button>
+      <button id="confirm" class="btn grow">Confirm answer</button>
+    </div>
+  </section>
+
+  <section id="result" class="hidden">
+    <h2>Exam complete</h2>
+    <p id="score" class="score"></p>
+    <p id="scoreNote" class="lead"></p>
+    <div id="record" class="record"></div>
+    <label class="nm">File name for download<input id="fileName"></label>
+    <div class="dock">
+      <button id="toReview" class="btn alt">Teacher review</button>
+      <button id="csv" class="btn alt">Download CSV</button>
+      <button id="retake" class="btn alt">Retake</button>
+      <button id="newExam" class="btn grow">New exam</button>
+    </div>
+  </section>
+  <section id="teacher" class="hidden">
+    <div class="head"><button class="btn alt" data-go="modeSelection">Back</button><h2>Check results</h2></div>
+    <div id="attempts" class="lib"></div>
+  </section>
+
+  <section id="review" class="hidden">
+    <div class="head"><button class="btn alt" data-go="teacher">Back</button><h2 id="revTitle"></h2></div>
+    <p id="revSum" class="lead"></p>
+    <div id="revList" class="lib"></div>
+    <label class="nm">Teacher comment<textarea id="revNote" rows="3"></textarea></label>
+    <div class="dock">
+      <button id="revCsv" class="btn alt">Download CSV</button>
+      <button id="revDel" class="btn alt">Delete</button>
+      <button id="revSave" class="btn grow">Save review</button>
+    </div>
+  </section>
+</main>
+
+<div id="toast" role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
